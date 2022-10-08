@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -378,4 +379,57 @@ int __lttf2(long double a, long double b) {
   } else {
     return -1;
   }
+}
+
+// Alternator stuff.
+int csoundLoadModules(CSOUND *csound) { return 0; }
+
+#define N 1024
+
+static CSOUND *cs;
+static double scale;
+static int channels;
+static int ksmps;
+static double *spout;
+static float output[N];
+
+static int spout_index;
+
+void _start();
+
+void *setup(float sample_rate) {
+  _start();
+  cs = csoundCreateWasi();
+  // ["--nchnls_i=0", "-b 1024"]
+  csoundSetOption(cs, "-odac");
+  csoundSetOption(cs, "-+rtaudio=null");
+  csoundSetOption(cs, "--sample-rate=44100");
+  csoundCompileCsd(cs, "main.csd");
+  csoundStart(cs);
+  scale = 1.0 / csoundGet0dBFS(cs);
+  ksmps = csoundGetKsmps(cs);
+  spout_index = ksmps;
+  channels = csoundGetNchnls(cs);
+  spout = csoundGetSpout(cs);
+  return output;
+}
+
+int process() {
+  static bool done = false;
+
+  int i;
+  for (i = 0; i < N; i++) {
+    if (spout_index == ksmps) {
+      if (done) {
+        break;
+      } else if (csoundPerformKsmpsWasi(cs) != 0) {
+        // Include the last Ksmps frames.
+        done = true;
+      }
+      spout_index = 0;
+    }
+    output[i] = spout[spout_index*channels] * scale;
+    spout_index++;
+  }
+  return i;
 }

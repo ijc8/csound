@@ -9,16 +9,13 @@ let
     echo "Create libcsound.wasm standalone"
     ${wasi-sdk}/bin/wasm-ld --lto-O2 \
       --entry=_start \
-      ${
-         pkgs.lib.concatMapStrings (x: " --export=" + x + " ")
-         (with builtins; fromJSON (readFile ./exports.json))
-       } \
-      -L${wasi-sdk}/share/wasi-sysroot/lib/wasm32-unknown-emscripten \
+      --export="setup" --export="process" \
+      -L${wasi-sdk}/share/wasi-sysroot/lib/wasm32-wasi \
       -L${libsndfile}/lib -L${libflac}/lib -L${libogg}/lib -L${libvorbis}/lib \
       -lc -lc++ -lc++abi -lrt -lutil -lxnet -lresolv -lc-printscan-long-double \
-      -lflac -logg -lvorbis -lsndfile -lwasi-emulated-getpid \
-      -lwasi-emulated-signal -lwasi-emulated-mman -lwasi-emulated-process-clocks \
-      ${wasi-sdk}/share/wasi-sysroot/lib/wasm32-unknown-emscripten/crt1.o \
+      -lflac -logg -lvorbis -lsndfile \
+      -lwasi-emulated-signal -lwasi-emulated-mman \
+      ${wasi-sdk}/share/wasi-sysroot/lib/wasm32-wasi/crt1.o \
        *.o -o csound.static.wasm
   '';
 

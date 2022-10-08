@@ -28,9 +28,9 @@
 #include <ctype.h>
 #include <math.h>
 
-#if defined(MSVC)
+//#if defined(MSVC)
 #include <fcntl.h>
-#endif
+//#endif
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 #  include <direct.h>
