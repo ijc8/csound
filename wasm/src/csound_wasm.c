@@ -403,7 +403,12 @@ void *setup(float sample_rate) {
   // ["--nchnls_i=0", "-b 1024"]
   csoundSetOption(cs, "-odac");
   csoundSetOption(cs, "-+rtaudio=null");
-  csoundSetOption(cs, "--sample-rate=44100");
+  int len = snprintf(NULL, 0, "--sample-rate=%f", sample_rate);
+  char *sample_rate_str = malloc(len + 1);
+  snprintf(sample_rate_str, len + 1, "--sample-rate=%f", sample_rate);
+  csoundSetOption(cs, sample_rate_str);
+  free(sample_rate_str);
+
   csoundCompileCsd(cs, "main.csd");
   csoundStart(cs);
   scale = 1.0 / csoundGet0dBFS(cs);
